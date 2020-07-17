@@ -16,6 +16,13 @@ add_edge!(petersen, 7, 9)
 add_edge!(petersen, 7, 10)
 add_edge!(petersen, 8, 10)
 
+function makeduallabelset!(graph, labelset)
+    for i in 1:length(labelset)
+        labelset[i] = abs(ne(graph) - labelset[i])
+    end
+    reverse!(labelset)
+end
+
 function isautomporphism(graph, labeling1, labeling2)
     Set(labeling1) == Set(labeling2) || return false
     for vertex1 in 1:length(labeling1)
@@ -26,6 +33,40 @@ function isautomporphism(graph, labeling1, labeling2)
         Set(vertex1neighborlabels) == Set(vertex2neighborlabels) || return false
     end
     return true
+end
+
+function getgracefullabelingfromlabelset(graph, labelset)
+    for labeling in permutations(labelset)
+        zeroindex = findfirst(x -> x==0, labeling)
+        maxindex = findfirst(x -> x==ne(graph), labeling)
+        in(zeroindex, neighbors(graph, maxindex)) || continue
+        if isgracefullabeling(graph, labeling)
+            return labeling
+        end
+    end
+end
+
+function getgracefullabelsets(graph)
+    result = []
+    possiblelabels = 0:ne(graph)
+    for labelset in combinations(possiblelabels, nv(graph))
+        in(labelset, result) && continue
+        in(0, labelset) && in(ne(graph), labelset) || continue
+        for labeling in permutations(labelset)
+            zeroindex = findfirst(x -> x==0, labeling)
+            maxindex = findfirst(x -> x==ne(graph), labeling)
+            in(zeroindex, neighbors(graph, maxindex)) || continue
+            if isgracefullabeling(graph, labeling)
+                append!(result, [labelset])
+                println(labelset)
+                makeduallabelset!(graph, labelset)
+                append!(result, [labelset])
+                println(labelset)
+                break
+            end
+        end
+    end
+    return result
 end
 
 function isgracefullabeling(graph, labeling)
@@ -46,13 +87,15 @@ end
 function isgraceful(graph)
     possiblelabels = 0:ne(graph)
     for labelset in combinations(possiblelabels, nv(graph))
-        in(0, labelset) && in(ne(graph) - 1, labelset) || continue
+        in(0, labelset) && in(ne(graph), labelset) || continue
         for labeling in permutations(labelset)
             zeroindex = findfirst(x -> x==0, labeling)
-            maxindex = findfirst(x -> x==ne(graph) - 1, labeling)
+            maxindex = findfirst(x -> x==ne(graph), labeling)
             in(zeroindex, neighbors(graph, maxindex)) || continue
             isgracefullabeling(graph, labeling) && return true
         end
     end
     return false
 end
+
+println(getgracefullabelingfromlabelset(petersen, [0, 1, 3, 5, 6, 7, 11, 12, 14, 15]))
