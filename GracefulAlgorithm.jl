@@ -1,20 +1,32 @@
 using LightGraphs, GraphPlot, BenchmarkTools, Combinatorics, Base.Threads
-g = SimpleGraph(10)
-add_edge!(g, 1, 2)
-add_edge!(g, 1, 5)
-add_edge!(g, 1, 6)
-add_edge!(g, 2, 3)
-add_edge!(g, 2, 7)
-add_edge!(g, 3, 4)
-add_edge!(g, 3, 8)
-add_edge!(g, 4, 5)
-add_edge!(g, 4, 9)
-add_edge!(g, 5, 10)
-add_edge!(g, 6, 8)
-add_edge!(g, 6, 9)
-add_edge!(g, 7, 9)
-add_edge!(g, 7, 10)
-add_edge!(g, 8, 10)
+petersen = SimpleGraph(10)
+add_edge!(petersen, 1, 2)
+add_edge!(petersen, 1, 5)
+add_edge!(petersen, 1, 6)
+add_edge!(petersen, 2, 3)
+add_edge!(petersen, 2, 7)
+add_edge!(petersen, 3, 4)
+add_edge!(petersen, 3, 8)
+add_edge!(petersen, 4, 5)
+add_edge!(petersen, 4, 9)
+add_edge!(petersen, 5, 10)
+add_edge!(petersen, 6, 8)
+add_edge!(petersen, 6, 9)
+add_edge!(petersen, 7, 9)
+add_edge!(petersen, 7, 10)
+add_edge!(petersen, 8, 10)
+
+function isautomporphism(graph, labeling1, labeling2)
+    Set(labeling1) == Set(labeling2) || return false
+    for vertex1 in 1:length(labeling1)
+        label1 = labeling1[vertex1]
+        vertex1neighborlabels = [labeling1[v] for v in neighbors(graph, vertex1)]
+        vertex2 = findfirst(x -> x==label1, labeling2)
+        vertex2neighborlabels = [labeling2[v] for v in neighbors(graph, vertex2)]
+        Set(vertex1neighborlabels) == Set(vertex2neighborlabels) || return false
+    end
+    return true
+end
 
 function isgracefullabeling(graph, labeling)
     edgelist = zeros(ne(graph))
@@ -39,12 +51,8 @@ function isgraceful(graph)
             zeroindex = findfirst(x -> x==0, labeling)
             maxindex = findfirst(x -> x==ne(graph) - 1, labeling)
             in(zeroindex, neighbors(graph, maxindex)) || continue
-            if isgracefullabeling(graph, labeling)
-                println("Graceful labeling found: $labeling")
-                return true
-            end
+            isgracefullabeling(graph, labeling) && return true
         end
     end
-    println("Graph is ungraceful.")
     return false
 end
