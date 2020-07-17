@@ -32,10 +32,13 @@ function isgracefullabeling(graph, labeling)
 end
 
 function isgraceful(graph)
-    labels = 0:ne(graph)
-    labelsets = combinations(labels, nv(graph))
-    for labelset in labelsets
+    possiblelabels = 0:ne(graph)
+    for labelset in combinations(possiblelabels, nv(graph))
+        in(0, labelset) && in(ne(graph) - 1, labelset) || continue
         for labeling in permutations(labelset)
+            zeroindex = findfirst(x -> x==0, labeling)
+            maxindex = findfirst(x -> x==ne(graph) - 1, labeling)
+            in(zeroindex, neighbors(graph, maxindex)) || continue
             if isgracefullabeling(graph, labeling)
                 println("Graceful labeling found: $labeling")
                 return true
