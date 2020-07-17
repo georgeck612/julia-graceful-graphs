@@ -1,4 +1,4 @@
-using LightGraphs, GraphPlot, BenchmarkTools
+using LightGraphs, GraphPlot, BenchmarkTools, Combinatorics, Base.Threads
 g = SimpleGraph(10)
 add_edge!(g, 1, 2)
 add_edge!(g, 1, 5)
@@ -31,4 +31,17 @@ function isgracefullabeling(graph, labeling)
     return true
 end
 
-@btime $isgracefullabeling($g, [3, 2, 13, 1, 11, 9, 0, 6, 14, 15])
+function isgraceful(graph)
+    labels = 0:ne(graph)
+    labelsets = combinations(labels, nv(graph))
+    for labelset in labelsets
+        for labeling in permutations(labelset)
+            if isgracefullabeling(graph, labeling)
+                println("Graceful labeling found: $labeling")
+                return true
+            end
+        end
+    end
+    println("Graph is ungraceful.")
+    return false
+end
