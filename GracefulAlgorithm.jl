@@ -98,4 +98,31 @@ function isgraceful(graph)
     return false
 end
 
-println(getgracefullabelingfromlabelset(petersen, [0, 1, 3, 5, 6, 7, 11, 12, 14, 15]))
+function getgracefullabeling(graph)
+    possiblelabels = 0:ne(graph)
+    for labelset in combinations(possiblelabels, nv(graph))
+        in(0, labelset) && in(ne(graph), labelset) || continue
+        for labeling in permutations(labelset)
+            zeroindex = findfirst(x -> x==0, labeling)
+            maxindex = findfirst(x -> x==ne(graph), labeling)
+            in(zeroindex, neighbors(graph, maxindex)) || continue
+            isgracefullabeling(graph, labeling) && return labeling
+        end
+    end
+    error("Input graph is not graceful.")
+end
+
+function getedgelabels(graph, labeling)
+    result = []
+    for edge in edges(graph)
+        append!(result, abs(labeling[src(edge)] - labeling[dst(edge)]))
+    end
+    return result
+end
+
+function drawlabeledgraph(graph)
+    gracefullabeling = getgracefullabeling(graph)
+    gplot(graph, nodelabel=gracefullabeling, edgelabel=getedgelabels(graph, gracefullabeling))
+end
+
+drawlabeledgraph(star_graph(8))
