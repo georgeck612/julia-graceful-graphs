@@ -144,6 +144,10 @@ function getedgelabels(graph, labeling)
     return result
 end
 
+function drawlabeledgraph(graph, labeling)
+    gplot(graph, nodelabel=labeling, edgelabel=getedgelabels(graph, labeling))
+end
+
 function drawlabeledgraph(graph)
     gracefullabeling = getgracefullabeling(graph)
     gplot(graph, nodelabel=gracefullabeling, edgelabel=getedgelabels(graph, gracefullabeling))
