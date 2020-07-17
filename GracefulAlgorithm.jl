@@ -35,6 +35,30 @@ function isautomporphism(graph, labeling1, labeling2)
     return true
 end
 
+function representativelabelsfromlabelset(graph, labelset)
+    result = []
+    for labeling in permutations(labelset)
+        zeroindex = findfirst(x -> x==0, labeling)
+        maxindex = findfirst(x -> x==ne(graph), labeling)
+        in(zeroindex, neighbors(graph, maxindex)) || continue
+        if isgracefullabeling(graph, labeling)
+            if isempty(result)
+                append!(result, [labeling])
+            else
+                flag = false
+                for gracefulabeling in result
+                    if isautomporphism(graph, gracefulabeling, labeling)
+                        flag = true
+                        break
+                    end
+                end
+                flag || append!(result, [labeling])
+            end
+        end
+    end
+    return result
+end
+
 function getgracefullabelingfromlabelset(graph, labelset)
     for labeling in permutations(labelset)
         zeroindex = findfirst(x -> x==0, labeling)
@@ -124,5 +148,3 @@ function drawlabeledgraph(graph)
     gracefullabeling = getgracefullabeling(graph)
     gplot(graph, nodelabel=gracefullabeling, edgelabel=getedgelabels(graph, gracefullabeling))
 end
-
-drawlabeledgraph(star_graph(8))
