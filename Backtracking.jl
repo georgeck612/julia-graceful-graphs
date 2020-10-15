@@ -1,4 +1,4 @@
-using IterTools, LightGraphs, GraphPlot, BenchmarkTools, Combinatorics, Random, Base.Threads
+using IterTools, LightGraphs, GraphPlot, BenchmarkTools, Combinatorics, Random, Base.Threads, GraphIO
 
 # credit to Ed Scheinerman for this
 function Kneser(n::Int,k::Int)
@@ -47,16 +47,24 @@ function isinternallyconnected(graph, vertexlist)
     return true
 end
 
-# this would be much, much, much better as a bfs/dfs from a random starting point but this is kinda fun (in a bad way)
-function getrandominternallyconnectedlist(graph)
-    v = randperm(nv(graph))
-    while !isinternallyconnected(graph, v) # this is bad code
-        shuffle!(v) # so much more fun than "randomize"
+function dfs(g, s, visited, order)
+    visited[s] = true
+    push!(order, s)
+    for w in neighbors(g, s)
+        if !visited[w]
+            dfs(g, w, visited, order)
+        end
     end
-    return v
+    return order
 end
 
-"Implemenation of algorithm from Shao et. al.'s paper. Finds a graceful labeling of a graph, if it exists."
+function getrandominternallyconnectedlist(graph)
+    v = rand(1:nv(graph))
+    verticeslist = dfs(graph, v, repeat([false], nv(graph)), Int[])
+    return(verticeslist)
+end
+
+"Implemenation of algorithm from Shao et. al.'s paper. Finds a graceful labeling of a graph, if it exists." # not guaranteed yet oops
 function backtracking(graph, ordering, level=1, label=0, vertexlabels=Int[], edgelabels=repeat([true], ne(graph)))
     if level != 1
         neighborlist = Int[]
@@ -83,7 +91,7 @@ function backtracking(graph, ordering, level=1, label=0, vertexlabels=Int[], edg
 
     # if all edges are labeled from 1 to m, we are done
     if !any(edgelabels)
-        println("graceful labeling found\n\nvertex order is $ordering\nlabels are $vertexlabels\n")
+        #println("graceful labeling found\n\nvertex order is $ordering\nlabels are $vertexlabels\n")
         return true
     end
 
@@ -114,4 +122,21 @@ function testgracefulness(graph)
     return backtracking(graph, ordering)
 end
 
-testgracefulness(Kneser(5,2))
+function main()
+    graphs = loadgraphs("cubicgraphs_order14.txt", Graph6Format())
+    count = 0
+    for graph in values(graphs)
+        count += 1
+        print("on graph number $count")
+        print("\r")
+        if is_connected(graph)
+            if !testgracefulness(graph)
+                println("found an ungraceful graph.")
+                return false
+            end
+        end
+    end
+    println("all connected cubic graphs on 14 vertices are graceful!!!!!!!")
+end
+
+main()
